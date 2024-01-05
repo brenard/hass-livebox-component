@@ -1,4 +1,5 @@
 """Sensor for Livebox router."""
+import asyncio
 import logging
 
 from homeassistant.components.switch import SwitchEntity
@@ -28,7 +29,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WifiSwitch(CoordinatorEntity[LiveboxDataUpdateCoordinator], SwitchEntity):
+class LiveboxSwitchEntity(SwitchEntity):
+    """Representation of a livebox switch."""
+
+    def turn_on(self, **kwargs):
+        """Synchronously turn on the switch by running the async method."""
+        asyncio.run_coroutine_threadsafe(
+            self.async_turn_on(**kwargs), self.hass.loop
+        ).result()
+
+    def turn_off(self, **kwargs):
+        """Synchronously turn off the switch by running the async method."""
+        asyncio.run_coroutine_threadsafe(
+            self.async_turn_off(**kwargs), self.hass.loop
+        ).result()
+
+
+class WifiSwitch(CoordinatorEntity[LiveboxDataUpdateCoordinator], LiveboxSwitchEntity):
     """Representation of a livebox sensor."""
 
     _attr_name = "Wifi switch"
@@ -59,7 +76,7 @@ class WifiSwitch(CoordinatorEntity[LiveboxDataUpdateCoordinator], SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-class GuestWifiSwitch(CoordinatorEntity, SwitchEntity):
+class GuestWifiSwitch(CoordinatorEntity, LiveboxSwitchEntity):
     """Representation of a livebox sensor."""
 
     _attr_name = "Guest Wifi switch"
@@ -95,7 +112,7 @@ class GuestWifiSwitch(CoordinatorEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-class DeviceWANAccessSwitch(CoordinatorEntity, SwitchEntity):
+class DeviceWANAccessSwitch(CoordinatorEntity, LiveboxSwitchEntity):
     """Representation of a livebox device WAN access switch."""
 
     _attr_name = "WAN access"
